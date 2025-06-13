@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct tipo_aluno {
+    int matricula;
+    char nome[100];
+    char curso[100];
+    struct tipo_aluno *prox;
+    struct tipo_aluno *ant;
+} Aluno;
+
+void iniciar(Aluno **cabeca) {
+    *cabeca = NULL;
+}
+
+void carregarArquivo(Aluno **cabeca) {
+    FILE *fp = fopen("database_alunos.txt", "r");
+    if (!fp) return;
+
+    int matricula;
+    char nome[100], curso[100];
+    while (fscanf(fp, "%d\n%[^\n]\n%[^\n]\n", &matricula, nome, curso) != EOF) {
+        Aluno *novo = (Aluno *)malloc(sizeof(Aluno));
+        strcpy(novo->nome, nome);
+        strcpy(novo->curso, curso);
+        novo->matricula = matricula;
+        novo->prox = *cabeca;
+        novo->ant = NULL;
+        if (*cabeca != NULL)
+            (*cabeca)->ant = novo;
+        *cabeca = novo;
+    }
+
+    fclose(fp);
+}
+
+void salvarArquivo(Aluno *cabeca) {
+    FILE *fp = fopen("database_alunos.txt", "w");
+    if (!fp) return;
+
+    Aluno *p = cabeca;
+    while (p != NULL) {
+        fprintf(fp, "%d\n%s\n%s\n", p->matricula, p->nome, p->curso);
+        p = p->prox;
+    }
+
+    fclose(fp);
+}
+
+void insere(char nome[], char curso[], int matricula, Aluno **cabeca) {
+    Aluno *novo = (Aluno *)malloc(sizeof(Aluno));
+    strcpy(novo->nome, nome);
+    strcpy(novo->curso, curso);
+    novo->matricula = matricula;
+    novo->prox = *cabeca;
+    novo->ant = NULL;
+
+    if (*cabeca != NULL)
+        (*cabeca)->ant = novo;
+
+    *cabeca = novo;
+    printf("Aluno %d inserido com sucesso.\n", matricula);
+}
+
+void imprime(Aluno *cabeca) {
+    printf("\n--- RELATÓRIO DE ALUNOS ---\n");
+    Aluno *p = cabeca;
+    while (p != NULL) {
+        printf("Matrícula: %d\nNome: %s\nCurso: %s\n---------------------\n",
+               p->matricula, p->nome, p->curso);
+        p = p->prox;
+    }
+}
+
+Aluno* buscar(Aluno *cabeca, int matricula) {
+    Aluno *p = cabeca;
+    while (p != NULL) {
+        if (p->matricula == matricula)
+            return p;
+        p = p->prox;
+    }
+    return NULL;
+}
+
+void remover_elemento(int matricula, Aluno **cabeca) {
+    Aluno *p = buscar(*cabeca, matricula);
+    if (!p) {
+        printf("Aluno com matrícula %d não encontrado.\n", matricula);
+        return;
+    }
+
+    if (p->ant)
+        p->ant->prox = p->prox;
+    else
+        *cabeca = p->prox;
+
+    if (p->prox)
+        p->prox->ant = p->ant;
+
+    free(p);
+    printf("Aluno com matrícula %d removido com sucesso.\n", matricula);
+}
+
+int main() {
+    Aluno *cabeca;
+    iniciar(&cabeca);
+    carregarArquivo(&cabeca);
+
+    char opcao;
+    do {
+        printf("\n========= MENU =========\n");
+        printf("i -> Inserir novo aluno\n");
+        printf("d -> Deletar aluno\n");
+        printf("r -> Relatório de alunos\n");
+        printf("s -> Sair\n");
+        printf("Opção: ");
+        scanf(" %c", &opcao);
+
+        if (opcao == 'i') {
+            char nome[100], curso[100];
+            int matricula;
+            printf("Digite a matrícula: ");
+            scanf("%d", &matricula);
+            getchar(); // limpa o buffer do enter
+            printf("Digite o nome: ");
+            fgets(nome, sizeof(nome), stdin);
+            nome[strcspn(nome, "\n")] = 0;
+            printf("Digite o curso: ");
+            fgets(curso, sizeof(curso), stdin);
+            curso[strcspn(curso, "\n")] = 0;
+
+            insere(nome, curso, matricula, &cabeca);
+        } else if (opcao == 'd') {
+            int matricula;
+            printf("Digite a matrícula para remover: ");
+            scanf("%d", &matricula);
+            remover_elemento(matricula, &cabeca);
+        } else if (opcao == 'r') {
+            imprime(cabeca);
+        } else if (opcao != 's') {
+            printf("Opção inválida. Tente novamente.\n");
+        }
+
+    } while (opcao != 's');
+
+    salvarArquivo(cabeca);
+    printf("Alterações salvas no arquivo.\n");
+    return 0;
+}

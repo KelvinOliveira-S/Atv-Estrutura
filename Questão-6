@@ -1,0 +1,145 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*
+    Sistema de controle de estacionamento com duas vagas (PILHAS).
+    Desenvolvido por: [NOMES DOS ALUNOS AQUI]
+
+    Estrutura de dados utilizada: PILHA
+    Justificativa: Como os carros são estacionados em uma vaga longa e só é possível remover o último carro que entrou
+    (último da pilha), o modelo mais adequado é a PILHA (LIFO - Last In First Out).
+*/
+
+typedef struct carro {
+    char proprietario[100];
+    char cpf[15];
+    char marca[50];
+    char modelo[50];
+    char placa[10];
+    struct carro *anterior;
+} Carro;
+
+void iniciar(Carro **topo) {
+    *topo = NULL;
+}
+
+void adicionar_carro(Carro **topo) {
+    Carro *novo = (Carro *)malloc(sizeof(Carro));
+
+    printf("Nome do proprietário: ");
+    getchar(); // limpar buffer
+    fgets(novo->proprietario, sizeof(novo->proprietario), stdin);
+    novo->proprietario[strcspn(novo->proprietario, "\n")] = 0;
+
+    printf("CPF: ");
+    fgets(novo->cpf, sizeof(novo->cpf), stdin);
+    novo->cpf[strcspn(novo->cpf, "\n")] = 0;
+
+    printf("Marca: ");
+    fgets(novo->marca, sizeof(novo->marca), stdin);
+    novo->marca[strcspn(novo->marca, "\n")] = 0;
+
+    printf("Modelo: ");
+    fgets(novo->modelo, sizeof(novo->modelo), stdin);
+    novo->modelo[strcspn(novo->modelo, "\n")] = 0;
+
+    printf("Placa: ");
+    fgets(novo->placa, sizeof(novo->placa), stdin);
+    novo->placa[strcspn(novo->placa, "\n")] = 0;
+
+    novo->anterior = *topo;
+    *topo = novo;
+
+    printf("Carro %s (%s) adicionado com sucesso!\n", novo->modelo, novo->placa);
+}
+
+void remover_carro(Carro **topo) {
+    if (*topo == NULL) {
+        printf("A vaga está vazia.\n");
+        return;
+    }
+
+    Carro *removido = *topo;
+    printf("Removendo carro %s (%s) do proprietário %s\n", removido->modelo, removido->placa, removido->proprietario);
+
+    *topo = removido->anterior;
+    free(removido);
+}
+
+void listar_carros(Carro **topo, int vaga) {
+    printf("\n--- VAGA %d ---\n", vaga);
+    if (*topo == NULL) {
+        printf("Vaga vazia.\n");
+        return;
+    }
+
+    Carro *p = *topo;
+    while (p != NULL) {
+        printf("Proprietário: %s | CPF: %s | Marca: %s | Modelo: %s | Placa: %s\n",
+               p->proprietario, p->cpf, p->marca, p->modelo, p->placa);
+        p = p->anterior;
+    }
+}
+
+int main() {
+    Carro *vaga1, *vaga2;
+    iniciar(&vaga1);
+    iniciar(&vaga2);
+
+    int opcao, escolha;
+
+    do {
+        printf("\n======= MENU ESTACIONAMENTO =======\n");
+        printf("1 - Adicionar carro em vaga\n");
+        printf("2 - Remover carro de vaga\n");
+        printf("3 - Listar carros da vaga\n");
+        printf("0 - Sair\n");
+        printf("Escolha: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                printf("Adicionar em qual vaga (1 ou 2)? ");
+                scanf("%d", &escolha);
+                if (escolha == 1)
+                    adicionar_carro(&vaga1);
+                else if (escolha == 2)
+                    adicionar_carro(&vaga2);
+                else
+                    printf("Vaga inválida!\n");
+                break;
+
+            case 2:
+                printf("Remover de qual vaga (1 ou 2)? ");
+                scanf("%d", &escolha);
+                if (escolha == 1)
+                    remover_carro(&vaga1);
+                else if (escolha == 2)
+                    remover_carro(&vaga2);
+                else
+                    printf("Vaga inválida!\n");
+                break;
+
+            case 3:
+                printf("Listar qual vaga (1 ou 2)? ");
+                scanf("%d", &escolha);
+                if (escolha == 1)
+                    listar_carros(&vaga1, 1);
+                else if (escolha == 2)
+                    listar_carros(&vaga2, 2);
+                else
+                    printf("Vaga inválida!\n");
+                break;
+
+            case 0:
+                printf("Encerrando o sistema...\n");
+                break;
+
+            default:
+                printf("Opção inválida!\n");
+        }
+    } while (opcao != 0);
+
+    return 0;
+}

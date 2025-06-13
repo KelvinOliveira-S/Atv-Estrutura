@@ -1,0 +1,48 @@
+#include <stdio.h>
+
+/*
+    Atividade de Aula - Ordenação com Insertion Sort
+    Alunos: [NOMES AQUI]
+    Estrutura utilizada: Vetor de inteiros
+    Objetivo: Demonstrar ordenação de dados usando o método Insertion Sort
+*/
+
+void insertionSort(int arr[], int n) {
+    for (int i = 1; i < n; i++) {
+        int atual = arr[i];
+        int j = i - 1;
+
+        // Move os elementos maiores que o atual uma posição à frente
+        while (j >= 0 && arr[j] > atual) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+
+        arr[j + 1] = atual;
+    }
+}
+
+void imprimirVetor(int arr[], int n) {
+    printf("Vetor ordenado: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int numeros[] = {9, 4, 7, 2, 5, 1};
+    int tamanho = sizeof(numeros) / sizeof(numeros[0]);
+
+    printf("Vetor original: ");
+    for (int i = 0; i < tamanho; i++) {
+        printf("%d ", numeros[i]);
+    }
+    printf("\n");
+
+    insertionSort(numeros, tamanho);
+
+    imprimirVetor(numeros, tamanho);
+
+    return 0;
+}

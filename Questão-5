@@ -1,0 +1,137 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct tipo_cliente {
+    int senha;
+    char nome[100];
+    int nrconta;
+    int idade;
+    struct tipo_cliente *anterior;
+} Cliente;
+
+void iniciar(Cliente **inicio, Cliente **fim){
+    *inicio = NULL;
+    *fim = NULL;
+}
+
+void insere(int senha, char nome[100], int nrconta, int idade, Cliente **inicio, Cliente **fim){
+    Cliente *novo = (Cliente *) malloc(sizeof(Cliente));
+    strcpy(novo->nome, nome);
+    novo->nrconta = nrconta;
+    novo->idade = idade;
+    novo->senha = senha;
+    novo->anterior = NULL;
+
+    if (*inicio == NULL) {
+        *inicio = (Cliente *) malloc(sizeof(Cliente));
+        (*inicio)->anterior = novo;
+        *fim = (Cliente *) malloc(sizeof(Cliente));
+        (*fim)->anterior = novo;
+    } else {
+        (*fim)->anterior->anterior = novo;
+        (*fim)->anterior = novo;
+    }
+
+    printf("%s (Idade %d) foi inserido na fila.\n", nome, idade);
+}
+
+int remover_elemento(Cliente **inicio, Cliente **fim){
+    if (*inicio == NULL || (*inicio)->anterior == NULL) {
+        return 0;
+    }
+
+    Cliente *delete = (*inicio)->anterior;
+
+    printf("Atendendo: %s (Senha: %d)\n", delete->nome, delete->senha);
+    (*inicio)->anterior = delete->anterior;
+    free(delete);
+
+    if ((*inicio)->anterior == NULL) {
+        iniciar(inicio, fim);
+    }
+
+    return 1;
+}
+
+void imprime(Cliente **inicio, char tipo[]) {
+    printf("\n--- FILA %s ---\n", tipo);
+    if (*inicio == NULL || (*inicio)->anterior == NULL) {
+        printf("Fila vazia.\n");
+        return;
+    }
+
+    Cliente *p = (*inicio)->anterior;
+    while (p != NULL) {
+        printf("Senha: %d | Nome: %s | Idade: %d | Conta: %d\n", p->senha, p->nome, p->idade, p->nrconta);
+        p = p->anterior;
+    }
+}
+
+int main() {
+    Cliente *inicioPref, *fimPref;
+    Cliente *inicioReg, *fimReg;
+    int senha = 1;
+    int alternador = 0; // 0 = preferencial, 1 = regular
+    char opcao;
+
+    iniciar(&inicioPref, &fimPref);
+    iniciar(&inicioReg, &fimReg);
+
+    do {
+        printf("\n========= MENU =========\n");
+        printf("I - Inserir cliente\n");
+        printf("C - Chamar cliente (atendimento)\n");
+        printf("L - Listar filas\n");
+        printf("S - Sair\n");
+        printf("Opção: ");
+        scanf(" %c", &opcao);
+
+        if (opcao == 'I' || opcao == 'i') {
+            char nome[100];
+            int nrconta, idade;
+
+            printf("Nome: ");
+            getchar(); // Limpar buffer
+            fgets(nome, sizeof(nome), stdin);
+            nome[strcspn(nome, "\n")] = 0; // Remover newline
+            printf("Número da conta: ");
+            scanf("%d", &nrconta);
+            printf("Idade: ");
+            scanf("%d", &idade);
+
+            if (idade > 60) {
+                insere(senha++, nome, nrconta, idade, &inicioPref, &fimPref);
+            } else {
+                insere(senha++, nome, nrconta, idade, &inicioReg, &fimReg);
+            }
+
+        } else if (opcao == 'C' || opcao == 'c') {
+            int sucesso = 0;
+            if (alternador == 0) {
+                sucesso = remover_elemento(&inicioPref, &fimPref);
+                if (!sucesso)
+                    sucesso = remover_elemento(&inicioReg, &fimReg); // fallback
+                alternador = 1;
+            } else {
+                sucesso = remover_elemento(&inicioReg, &fimReg);
+                if (!sucesso)
+                    sucesso = remover_elemento(&inicioPref, &fimPref); // fallback
+                alternador = 0;
+            }
+
+            if (!sucesso)
+                printf("Todas as filas estão vazias.\n");
+
+        } else if (opcao == 'L' || opcao == 'l') {
+            imprime(&inicioPref, "PREFERENCIAL");
+            imprime(&inicioReg, "REGULAR");
+        } else if (opcao != 'S' && opcao != 's') {
+            printf("Opção inválida.\n");
+        }
+
+    } while (opcao != 'S' && opcao != 's');
+
+    printf("Encerrando o sistema...\n");
+    return 0;
+}
